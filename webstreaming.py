@@ -1,5 +1,3 @@
-
-
 from imutils.video import VideoStream
 from flask import Flask, render_template, Response
 from edgetpu.detection.engine import DetectionEngine
@@ -16,25 +14,23 @@ label_text_color = (255, 255, 255)
 
 outputFrame = None
 lock = threading.Lock()
-engine = DetectionEngine(
-    '/home/pi/Flask-Coral-Edge-TPU
-/tpu/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite')
-labels = dataset_utils.read_label_file(
-    '/home/pi/Flask-Coral-Edge-TPU
-/tpu/coco_labels.txt')
+
+engine = DetectionEngine('/home/mendel/example/Flask-Coral-Edge-TPU/tpu/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite')
+labels = dataset_utils.read_label_file('/home/mendel/example/Flask-Coral-Edge-TPU/tpu/coco_labels.txt')
 
 app = Flask(__name__)
 
 
-vs = VideoStream(usePiCamera=True,  resolution=(320, 240)).start()
-#vs = VideoStream(src=0).start()
+# vs = VideoStream(usePiCamera=True,  resolution=(320, 240)).start()
+# #vs = VideoStream(src=0).start()
+#cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 time.sleep(2.0)
-
+cap.set(5,30)
 
 @app.route("/")
 def index():
     return render_template("index.html")
-
 
 def detect_objects():
 
@@ -43,7 +39,7 @@ def detect_objects():
     while True:
 
         start_time = time.time()
-        frame = vs.read()
+        _, frame = cap.read()
         frame = imutils.rotate(frame, angle=180)
 
         prepimg = Image.fromarray(frame.copy())
@@ -78,8 +74,8 @@ def detect_objects():
                 cv2.putText(frame, label_text, (label_left, label_bottom),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, label_text_color, 1)
 
-        fps = round(1.0 / (time.time() - start_time), 0)
-
+        fps = round(1.0 / (time.time() - start_time), 3)
+        print("FPS: ",fps)
         cv2.putText(frame, f"FPS: {fps}", (10, frame.shape[0] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.35, box_color, 1)
 
@@ -120,4 +116,4 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True,
             threaded=True, use_reloader=False)
 
-vs.stop()
+cap.release
